@@ -17,11 +17,11 @@ Een gebruiksvriendelijke volumecalculator voor chemische ankers, specifiek ontwi
   - Totaal volume
   - Aantal benodigde kokers
 
-## 🛠️ Technologieën
+## 🛠️ Gebruikte tools
 
-- **React** (CDN via Babel)
-- **TailwindCSS**
-- Hosted via **Netlify**
+- **React** (via CDN met Babel)
+- **TailwindCSS** voor styling
+- Hosting via **Netlify**
 - Geen build tooling nodig – alles draait in de browser
 
 ## 📁 Bestanden
