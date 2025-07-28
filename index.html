@@ -169,7 +169,13 @@
                   className="border rounded-xl p-3 hover:shadow transition flex flex-col items-center bg-gray-50"
                 >
                   <span className="font-semibold mb-2 text-center text-sm">{product.label}</span>
-                  <img src={`images/${product.img}`} alt={product.label} className="h-24 object-contain rounded-lg" />
+                  {/*
+                   * Images live in the root of the repository on GitHub/Netlify.  
+                   * When deploying, the files will reside alongside index.html.  
+                   * Therefore we reference the filenames directly instead of 
+                   * prefixing with a folder path.  
+                   */}
+                  <img src={`${product.img}`} alt={product.label} className="h-24 object-contain rounded-lg" />
                 </button>
               ))}
             </div>
