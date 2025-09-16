@@ -2,7 +2,7 @@
 
 Een gebruiksvriendelijke volumecalculator voor chemische ankers, specifiek ontwikkeld voor de producten van **Sympafix**. Deze webapp helpt installateurs en bouwprofessionals om snel en nauwkeurig het benodigde aantal kokers te berekenen op basis van boorgegevens.
 
-🔗 **Live demo:** [sympafix-volume-calculator.netlify.app]([https://sympafix-volume-calculator.netlify.app](https://sympafix-volumecalculator.netlify.app/))
+🔗 **Live demo:** [sympafix-volume-calculator.netlify.app](https://sympafix-volumecalculator.netlify.app/)
 
 ## 📦 Functionaliteit
 
