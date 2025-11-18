@@ -1,257 +1,361 @@
 <!DOCTYPE html>
 <html lang="nl">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Sympafix volumecalculator</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sympafix volumecalculator</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 </head>
 <body class="bg-gray-100">
-  <div id="root" class="p-4"></div>
+  <div id="root" class="min-h-screen flex items-center justify-center p-4"></div>
 
-  <script type="text/babel">
-    function SympafixCalculator() {
-      const [step, setStep] = React.useState(1);
-      const [inputs, setInputs] = React.useState({
-        product: "_C100_PLUS",
-        verlijming: "massief_draadeinden",
-        staafdiameter: 16,
-        boordiameter: 18,
-        diepte: 440,
-        verlies: 15,
-        kokermaat: 300,
-        aantalGaten: 36,
-        zeefhuls: "",
-      });
-      const [result, setResult] = React.useState(null);
+  <script type="text/babel">
+    function SympafixCalculator() {
+      const [step, setStep] = React.useState(1);
+      const [inputs, setInputs] = React.useState({
+        product: "_C100_PLUS",
+        verlijming: "massief_draadeinden",
+        staafdiameter: 16,
+        boordiameter: 18,
+        diepte: 440,
+        verlies: 15,
+        kokermaat: 300,
+        aantalGaten: 36,
+        zeefhuls: "",
+      });
+      const [result, setResult] = React.useState(null);
 
-      const DIAMETER_OPTIES = {
-        massief_draadeinden: [6, 8, 10, 12, 16, 20, 24, 27, 30],
-        massief_wapening: [8, 10, 12, 14, 16, 20, 25, 28, 32],
-      };
+      const DIAMETER_OPTIES = {
+        massief_draadeinden: [6, 8, 10, 12, 16, 20, 24, 27, 30],
+        massief_wapening: [8, 10, 12, 14, 16, 20, 25, 28, 32],
+      };
 
-      const BOORDIAMETER_MAPPING = {
-        massief_draadeinden: { 6: 8, 8: 10, 10: 12, 12: 14, 16: 18, 20: 24, 24: 28, 27: 32, 30: 35 },
-        massief_wapening: { 8: 12, 10: 14, 12: 16, 14: 18, 16: 20, 20: 24, 25: 32, 28: 35, 32: 40 },
-      };
+      const BOORDIAMETER_MAPPING = {
+        massief_draadeinden: { 6: 8, 8: 10, 10: 12, 12: 14, 16: 18, 20: 24, 24: 28, 27: 32, 30: 35 },
+        massief_wapening: { 8: 12, 10: 14, 12: 16, 14: 18, 16: 20, 20: 24, 25: 32, 28: 35, 32: 40 },
+      };
 
-      const ZEEFHULS_MAPPING = {
-        "M6 - Zeefhuls 12mm": 12,
-        "M8 - Zeefhuls 12mm": 12,
-        "M8 - Zeefhuls 16mm": 16,
-        "M10 - Zeefhuls 16mm": 16,
-        "M12 - Zeefhuls 16mm": 16,
-        "M12 - Zeefhuls 20mm": 20,
-        "M16 - Zeefhuls 20mm": 20,
-      };
+      const ZEEFHULS_MAPPING = {
+        "M6 - Zeefhuls 12mm": 12,
+        "M8 - Zeefhuls 12mm": 12,
+        "M8 - Zeefhuls 16mm": 16,
+        "M10 - Zeefhuls 16mm": 16,
+        "M12 - Zeefhuls 16mm": 16,
+        "M12 - Zeefhuls 20mm": 20,
+        "M16 - Zeefhuls 20mm": 20,
+      };
 
-      const isHolOptieToegestaan = (product) => ["_C100_PLUS", "_M50_PLUS"].includes(product);
+      const isHolOptieToegestaan = (product) => ["_C100_PLUS", "_M50_PLUS"].includes(product);
 
-      function getBoordiameter(verlijming, staafdiameter, zeefhuls, fallback) {
-        if (verlijming === "hol_zeefhuls") {
-          return zeefhuls ? (ZEEFHULS_MAPPING[zeefhuls] ?? fallback) : fallback;
-        }
-        const mapping = BOORDIAMETER_MAPPING[verlijming] || {};
-        return mapping[staafdiameter] ?? fallback;
-      }
+      function getBoordiameter(verlijming, staafdiameter, zeefhuls, fallback) {
+        if (verlijming === "hol_zeefhuls") {
+          return zeefhuls ? (ZEEFHULS_MAPPING[zeefhuls] ?? fallback) : fallback;
+        }
+        const mapping = BOORDIAMETER_MAPPING[verlijming] || {};
+        return mapping[staafdiameter] ?? fallback;
+      }
 
-      function computeNewStateOnProductSelect(prev, productValue) {
-        const holToegestaan = isHolOptieToegestaan(productValue);
-        const nieuweVerlijming = holToegestaan ? prev.verlijming : (prev.verlijming === "hol_zeefhuls" ? "massief_draadeinden" : prev.verlijming);
-        let nieuweStaaf = prev.staafdiameter;
-        if (nieuweVerlijming !== "hol_zeefhuls") {
-          const opties = DIAMETER_OPTIES[nieuweVerlijming];
-          if (!opties || !opties.includes(nieuweStaaf)) nieuweStaaf = opties[0];
-        }
-        const nieuweBoord = getBoordiameter(nieuweVerlijming, nieuweStaaf, prev.zeefhuls, prev.boordiameter);
-        return { ...prev, product: productValue, verlijming: nieuweVerlijming, staafdiameter: nieuweStaaf, boordiameter: nieuweBoord };
-      }
+      function computeNewStateOnProductSelect(prev, productValue) {
+        const holToegestaan = isHolOptieToegestaan(productValue);
+        const nieuweVerlijming = holToegestaan
+          ? prev.verlijming
+          : (prev.verlijming === "hol_zeefhuls" ? "massief_draadeinden" : prev.verlijming);
+        let nieuweStaaf = prev.staafdiameter;
+        if (nieuweVerlijming !== "hol_zeefhuls") {
+          const opties = DIAMETER_OPTIES[nieuweVerlijming];
+          if (!opties || !opties.includes(nieuweStaaf)) nieuweStaaf = opties[0];
+        }
+        const nieuweBoord = getBoordiameter(nieuweVerlijming, nieuweStaaf, prev.zeefhuls, prev.boordiameter);
+        return {
+          ...prev,
+          product: productValue,
+          verlijming: nieuweVerlijming,
+          staafdiameter: nieuweStaaf,
+          boordiameter: nieuweBoord
+        };
+      }
 
-      const handleChange = (e) => {
-        const { name, value } = e.target;
-        if (name === "staafdiameter") {
-          const d = parseInt(value, 10);
-          const bd = getBoordiameter(inputs.verlijming, d, inputs.zeefhuls, inputs.boordiameter);
-          setInputs((prev) => ({ ...prev, staafdiameter: d, boordiameter: bd }));
-          return;
-        }
-        if (name === "verlijming") {
-          const nieuweVerlijming = value;
-          if (nieuweVerlijming === "hol_zeefhuls") {
-            const bd = getBoordiameter("hol_zeefhuls", inputs.staafdiameter, inputs.zeefhuls, inputs.boordiameter);
-            setInputs((prev) => ({ ...prev, verlijming: nieuweVerlijming, boordiameter: bd }));
-            return;
-          }
-          const opties = DIAMETER_OPTIES[nieuweVerlijming];
-          const geldige = opties.includes(inputs.staafdiameter) ? inputs.staafdiameter : opties[0];
-          const bd = getBoordiameter(nieuweVerlijming, geldige, inputs.zeefhuls, inputs.boordiameter);
-          setInputs((prev) => ({ ...prev, verlijming: nieuweVerlijming, staafdiameter: geldige, boordiameter: bd }));
-          return;
-        }
-        if (name === "zeefhuls") {
-          const zh = value;
-          const bd = getBoordiameter("hol_zeefhuls", inputs.staafdiameter, zh, inputs.boordiameter);
-          setInputs((prev) => ({ ...prev, zeefhuls: zh, boordiameter: bd }));
-          return;
-        }
-        const numericFields = ["diepte", "verlies", "kokermaat", "aantalGaten"];
-        if (numericFields.includes(name)) {
-          const num = value === "" ? "" : Number(value);
-          setInputs((prev) => ({ ...prev, [name]: num }));
-        } else {
-          setInputs((prev) => ({ ...prev, [name]: value }));
-        }
-      };
+      const handleChange = (e) => {
+        const { name, value } = e.target;
+        if (name === "staafdiameter") {
+          const d = parseInt(value, 10);
+          const bd = getBoordiameter(inputs.verlijming, d, inputs.zeefhuls, inputs.boordiameter);
+          setInputs((prev) => ({ ...prev, staafdiameter: d, boordiameter: bd }));
+          return;
+        }
+        if (name === "verlijming") {
+          const nieuweVerlijming = value;
+          if (nieuweVerlijming === "hol_zeefhuls") {
+            const bd = getBoordiameter("hol_zeefhuls", inputs.staafdiameter, inputs.zeefhuls, inputs.boordiameter);
+            setInputs((prev) => ({ ...prev, verlijming: nieuweVerlijming, boordiameter: bd }));
+            return;
+          }
+          const opties = DIAMETER_OPTIES[nieuweVerlijming];
+          const geldige = opties.includes(inputs.staafdiameter) ? inputs.staafdiameter : opties[0];
+          const bd = getBoordiameter(nieuweVerlijming, geldige, inputs.zeefhuls, inputs.boordiameter);
+          setInputs((prev) => ({
+            ...prev,
+            verlijming: nieuweVerlijming,
+            staafdiameter: geldige,
+            boordiameter: bd
+          }));
+          return;
+        }
+        if (name === "zeefhuls") {
+          const zh = value;
+          const bd = getBoordiameter("hol_zeefhuls", inputs.staafdiameter, zh, inputs.boordiameter);
+          setInputs((prev) => ({ ...prev, zeefhuls: zh, boordiameter: bd }));
+          return;
+        }
+        const numericFields = ["diepte", "verlies", "kokermaat", "aantalGaten"];
+        if (numericFields.includes(name)) {
+          const num = value === "" ? "" : Number(value);
+          setInputs((prev) => ({ ...prev, [name]: num }));
+        } else {
+          setInputs((prev) => ({ ...prev, [name]: value }));
+        }
+      };
 
-      const calculate = () => {
-        const pi = 3.14;
-        const straal = inputs.boordiameter / 20;
-        const hoogte = inputs.diepte / 10;
-        const verliesFactor = 1 + inputs.verlies / 100;
-        let volumePerGat = 0;
-        if (inputs.verlijming === "massief_draadeinden") volumePerGat = pi * straal * straal * hoogte * 0.5 * verliesFactor;
-        else if (inputs.verlijming === "massief_wapening") volumePerGat = pi * straal * straal * hoogte * 0.7 * verliesFactor;
-        else if (inputs.verlijming === "hol_zeefhuls") volumePerGat = pi * straal * straal * hoogte * verliesFactor;
-        const totaalVolume = volumePerGat * inputs.aantalGaten;
-        const nuttigeInhoud = inputs.kokermaat - 50;
-        const aantalKokers = Math.ceil(totaalVolume / nuttigeInhoud);
-        setResult({ volumePerGat, totaalVolume, aantalKokers });
-      };
+      const calculate = () => {
+        const pi = 3.14;
+        const straal = inputs.boordiameter / 20;
+        const hoogte = inputs.diepte / 10;
+        const verliesFactor = 1 + inputs.verlies / 100;
+        let volumePerGat = 0;
+        if (inputs.verlijming === "massief_draadeinden") {
+          volumePerGat = pi * straal * straal * hoogte * 0.5 * verliesFactor;
+        } else if (inputs.verlijming === "massief_wapening") {
+          volumePerGat = pi * straal * straal * hoogte * 0.7 * verliesFactor;
+        } else if (inputs.verlijming === "hol_zeefhuls") {
+          volumePerGat = pi * straal * straal * hoogte * verliesFactor;
+        }
+        const totaalVolume = volumePerGat * inputs.aantalGaten;
+        const nuttigeInhoud = inputs.kokermaat - 50;
+        const aantalKokers = Math.ceil(totaalVolume / nuttigeInhoud);
+        setResult({ volumePerGat, totaalVolume, aantalKokers });
+      };
 
-      const renderKokerOptions = () => {
-        switch (inputs.product) {
-          case "_UC200_PLUS_ULTRABOND": return [280, 420];
-          case "_C100_PLUS": return [150, 300, 360, 420];
-          case "_M50_PLUS": return [300, 410];
-          case "_X150_PLUS": return [585, 1400];
-          default: return [300];
-        }
-      };
+      const renderKokerOptions = () => {
+        switch (inputs.product) {
+          case "_UC200_PLUS_ULTRABOND": return [280, 420];
+          case "_C100_PLUS": return [150, 300, 360, 420];
+          case "_M50_PLUS": return [300, 410];
+          case "_X150_PLUS": return [585, 1400];
+          default: return [300];
+        }
+      };
 
-      const renderDiameterOptions = () => {
-        if (inputs.verlijming === "massief_draadeinden") {
-          return DIAMETER_OPTIES.massief_draadeinden.map((d) => (
-            <option key={d} value={d}>{`M${d}`}</option>
-          ));
-        }
-        if (inputs.verlijming === "massief_wapening") {
-          return DIAMETER_OPTIES.massief_wapening.map((d) => (
-            <option key={d} value={d}>{`Ø${d}`}</option>
-          ));
-        }
-        return [];
-      };
+      const renderDiameterOptions = () => {
+        if (inputs.verlijming === "massief_draadeinden") {
+          return DIAMETER_OPTIES.massief_draadeinden.map((d) => (
+            <option key={d} value={d}>{`M${d}`}</option>
+          ));
+        }
+        if (inputs.verlijming === "massief_wapening") {
+          return DIAMETER_OPTIES.massief_wapening.map((d) => (
+            <option key={d} value={d}>{`Ø${d}`}</option>
+          ));
+        }
+        return [];
+      };
 
-      const renderZeefhulsOptions = () => (
-        Object.keys(ZEEFHULS_MAPPING).map((label) => (
-          <option key={label} value={label}>{label}</option>
-        ))
-      );
+      const renderZeefhulsOptions = () => (
+        Object.keys(ZEEFHULS_MAPPING).map((label) => (
+          <option key={label} value={label}>{label}</option>
+        ))
+      );
 
-      if (step === 1) {
-        const products = [
-          { label: "UC200-PLUS ULTRABOND", value: "_UC200_PLUS_ULTRABOND", img: "uc200plus.png" },
-          { label: "C100-PLUS", value: "_C100_PLUS", img: "c100plus.png" },
-          { label: "M50-PLUS", value: "_M50_PLUS", img: "m50plus.png" },
-          { label: "X150+PLUS", value: "_X150_PLUS", img: "x150plus.png" },
-        ];
-        const handleProductSelect = (productValue) => {
-          setInputs((prev) => computeNewStateOnProductSelect(prev, productValue));
-          setStep(2);
-        };
-        return (
-          <div className="p-4 max-w-3xl mx-auto bg-white shadow rounded-2xl">
-            <h1 className="text-2xl font-bold text-center mb-6">Kies uw product</h1>
-            <div className="grid grid-cols-2 gap-4">
-              {products.map((product) => (
-                <button
-                  key={product.value}
-                  onClick={() => handleProductSelect(product.value)}
-                  className="border rounded-2xl p-3 hover:shadow transition flex flex-col items-center bg-gray-50"
-                >
-                  <span className="font-semibold mb-2 text-center text-sm">{product.label}</span>
-                  <img src={`${product.img}`} alt={product.label} className="h-24 object-contain rounded-lg" />
-                </button>
-              ))}
-            </div>
-          </div>
-        );
-      }
+      const Disclaimer = () => (
+        <p className="mt-4 text-xs text-gray-400 text-center leading-snug">
+          Disclaimer: Aan het gebruik van deze tool kunnen geen rechten worden ontleend.
+          Controleer altijd zelf of de informatie juist is.
+        </p>
+      );
 
-      return (
-        <div className="p-4 max-w-md mx-auto bg-white shadow rounded-2xl space-y-4 font-sans">
-          <button onClick={() => setStep(1)} className="text-sm bg-gray-200 px-4 py-1 rounded hover:bg-gray-300">← Terug naar productkeuze</button>
-          <h1 className="text-2xl font-bold text-center mb-2">Sympafix volumecalculator</h1>
-          <p className="text-center text-sm text-gray-600">Gekozen product: {inputs.product.replace(/_/g, ' ').trim()}</p>
+      if (step === 1) {
+        const products = [
+          { label: "UC200-PLUS ULTRABOND", value: "_UC200_PLUS_ULTRABOND", img: "uc200plus.png" },
+          { label: "C100-PLUS", value: "_C100_PLUS", img: "c100plus.png" },
+          { label: "M50-PLUS", value: "_M50_PLUS", img: "m50plus.png" },
+          { label: "X150+PLUS", value: "_X150_PLUS", img: "x150plus.png" },
+        ];
+        const handleProductSelect = (productValue) => {
+          setInputs((prev) => computeNewStateOnProductSelect(prev, productValue));
+          setResult(null);
+          setStep(2);
+        };
+        return (
+          <div className="w-full max-w-3xl mx-auto bg-white shadow-lg rounded-2xl p-6">
+            <h1 className="text-2xl font-bold text-center mb-2">Sympafix volumecalculator</h1>
+            <p className="text-center text-gray-600 mb-6 text-sm">
+              Kies hieronder het gewenste product om de berekening te starten.
+            </p>
+            <div className="grid grid-cols-2 gap-4">
+              {products.map((product) => (
+                <button
+                  key={product.value}
+                  onClick={() => handleProductSelect(product.value)}
+                  className="border rounded-2xl p-4 hover:shadow-md transition flex flex-col items-center bg-gray-50"
+                >
+                  <span className="font-semibold mb-2 text-center text-sm">{product.label}</span>
+                  <div className="w-full flex justify-center">
+                    <img
+                      src={`${product.img}`}
+                      alt={product.label}
+                      className="h-24 object-contain rounded-lg"
+                    />
+                  </div>
+                </button>
+              ))}
+            </div>
+            <Disclaimer />
+          </div>
+        );
+      }
 
-          <div className="grid grid-cols-2 gap-2 items-center">
-            <span className="font-medium">Volume koker:</span>
-            <select name="kokermaat" value={inputs.kokermaat} onChange={handleChange} className="p-2 border rounded">
-              {renderKokerOptions().map((ml) => (<option key={ml} value={ml}>{ml} ml</option>))}
-            </select>
+      return (
+        <div className="w-full max-w-md mx-auto bg-white shadow-lg rounded-2xl p-6 space-y-5 font-sans">
+          <button
+            onClick={() => setStep(1)}
+            className="text-xs bg-gray-100 px-3 py-1 rounded-full hover:bg-gray-200 transition"
+          >
+            ← Terug naar productkeuze
+          </button>
 
-            <span className="font-medium">Wat verlijmt u:</span>
-            <select name="verlijming" value={inputs.verlijming} onChange={handleChange} className="p-2 border rounded">
-              <option value="massief_draadeinden">In massieve ondergrond, draadeinden</option>
-              <option value="massief_wapening">In massieve ondergrond, wapening</option>
-              {isHolOptieToegestaan(inputs.product) && (<option value="hol_zeefhuls">In hol metselwerk met zeefhuls</option>)}
-            </select>
+          <div className="space-y-1">
+            <h1 className="text-2xl font-bold text-center">Sympafix volumecalculator</h1>
+            <p className="text-center text-sm text-gray-600">
+              Gekozen product: {inputs.product.replace(/_/g, " ").trim()}
+            </p>
+          </div>
 
-            {inputs.verlijming === "hol_zeefhuls" ? (
-              <>
-                <span className="font-medium">Zeefhuls:</span>
-                <select name="zeefhuls" value={inputs.zeefhuls} onChange={handleChange} className="p-2 border rounded">
-                  {renderZeefhulsOptions()}
-                </select>
-              </>
-            ) : (
-              <>
-                <span className="font-medium">Diameter anker:</span>
-                <select name="staafdiameter" value={inputs.staafdiameter} onChange={handleChange} className="p-2 border rounded">
-                  {renderDiameterOptions()}
-                </select>
-              </>
-            )}
+          <div className="space-y-4 mt-2">
+            <div className="flex flex-col gap-1">
+              <label className="font-medium text-sm">Volume koker</label>
+              <select
+                name="kokermaat"
+                value={inputs.kokermaat}
+                onChange={handleChange}
+                className="p-2 border rounded-lg text-sm"
+              >
+                {renderKokerOptions().map((ml) => (
+                  <option key={ml} value={ml}>{ml} ml</option>
+                ))}
+              </select>
+            </div>
 
-            <span className="font-medium">Boordiameter:</span>
-            <div className="p-2 border rounded bg-gray-100 text-gray-700">{inputs.boordiameter} mm</div>
+            <div className="flex flex-col gap-1">
+              <label className="font-medium text-sm">Wat verlijmt u</label>
+              <select
+                name="verlijming"
+                value={inputs.verlijming}
+                onChange={handleChange}
+                className="p-2 border rounded-lg text-sm"
+              >
+                <option value="massief_draadeinden">In massieve ondergrond, draadeinden</option>
+                <option value="massief_wapening">In massieve ondergrond, wapening</option>
+                {isHolOptieToegestaan(inputs.product) && (
+                  <option value="hol_zeefhuls">In hol metselwerk met zeefhuls</option>
+                )}
+              </select>
+            </div>
 
-            <span className="font-medium">Boordiepte (mm):</span>
-            <input type="number" name="diepte" value={inputs.diepte} onChange={handleChange} className="p-2 border rounded" />
+            {inputs.verlijming === "hol_zeefhuls" ? (
+              <div className="flex flex-col gap-1">
+                <label className="font-medium text-sm">Zeefhuls</label>
+                <select
+                  name="zeefhuls"
+                  value={inputs.zeefhuls}
+                  onChange={handleChange}
+                  className="p-2 border rounded-lg text-sm"
+                >
+                  {renderZeefhulsOptions()}
+                </select>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-1">
+                <label className="font-medium text-sm">Diameter anker</label>
+                <select
+                  name="staafdiameter"
+                  value={inputs.staafdiameter}
+                  onChange={handleChange}
+                  className="p-2 border rounded-lg text-sm"
+                >
+                  {renderDiameterOptions()}
+                </select>
+              </div>
+            )}
 
-            <span className="font-medium">Verlies:</span>
-            <select name="verlies" value={inputs.verlies} onChange={handleChange} className="p-2 border rounded">
-              <option value={10}>10%</option>
-              <option value={15}>15%</option>
-              <option value={20}>20%</option>
-              <option value={25}>25%</option>
-            </select>
+            <div className="flex flex-col gap-1">
+              <label className="font-medium text-sm">Boordiameter</label>
+              <div className="p-2 border rounded-lg bg-gray-50 text-gray-700 text-sm">
+                {inputs.boordiameter} mm
+              </div>
+            </div>
 
-            <span className="font-medium">Aantal boorgaten:</span>
-            <input type="number" name="aantalGaten" value={inputs.aantalGaten} onChange={handleChange} className="p-2 border rounded" />
-          </div>
+            <div className="flex flex-col gap-1">
+              <label className="font-medium text-sm">Boordiepte (mm)</label>
+              <input
+                type="number"
+                name="diepte"
+                value={inputs.diepte}
+                onChange={handleChange}
+                className="p-2 border rounded-lg text-sm"
+              />
+            </div>
 
-          <button onClick={calculate} className="mt-4 w-full bg-black text-white px-6 py-2 rounded-xl hover:bg-gray-800 transition">Bereken aantal kokers</button>
+            <div className="flex flex-col gap-1">
+              <label className="font-medium text-sm">Verlies</label>
+              <select
+                name="verlies"
+                value={inputs.verlies}
+                onChange={handleChange}
+                className="p-2 border rounded-lg text-sm"
+              >
+                <option value={10}>10%</option>
+                <option value={15}>15%</option>
+                <option value={20}>20%</option>
+                <option value={25}>25%</option>
+              </select>
+            </div>
 
-          {result && (
-            <div className="mt-6 p-4 border rounded-2xl bg-gray-50 text-left space-y-2 text-sm">
-              <p><strong>Volume per boorgat:</strong> {result.volumePerGat.toFixed(2)} ml</p>
-              <p><strong>Totaal nodig:</strong> {result.totaalVolume.toFixed(2)} ml</p>
-              <p><strong>Aantal kokers:</strong> {result.aantalKokers}</p>
-            </div>
-          )}
-        </div>
-      );
-    }
+            <div className="flex flex-col gap-1">
+              <label className="font-medium text-sm">Aantal boorgaten</label>
+              <input
+                type="number"
+                name="aantalGaten"
+                value={inputs.aantalGaten}
+                onChange={handleChange}
+                className="p-2 border rounded-lg text-sm"
+              />
+            </div>
+          </div>
 
-    const root = ReactDOM.createRoot(document.getElementById('root'));
-    root.render(<SympafixCalculator />);
-  </script>
+          <button
+            onClick={calculate}
+            className="mt-2 w-full bg-black text-white px-6 py-2.5 rounded-xl text-sm font-medium hover:bg-gray-800 transition"
+          >
+            Bereken aantal kokers
+          </button>
+
+          {result && (
+            <div className="mt-4 p-4 border rounded-2xl bg-gray-50 text-left space-y-1.5 text-sm">
+              <p><strong>Volume per boorgat:</strong> {result.volumePerGat.toFixed(2)} ml</p>
+              <p><strong>Totaal nodig:</strong> {result.totaalVolume.toFixed(2)} ml</p>
+              <p><strong>Aantal kokers:</strong> {result.aantalKokers}</p>
+            </div>
+          )}
+
+          <Disclaimer />
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById("root"));
+    root.render(<SympafixCalculator />);
+  </script>
 </body>
 </html>
-
-
-ik wil een disclaimer erbij: "Disclaimer: Aan het gebruik van deze tool kunnen geen rechten worden ontleend. Controleer altijd zelf of de informatie juist is."
