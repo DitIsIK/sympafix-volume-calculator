@@ -4,15 +4,13 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Sympafix volumecalculator</title>
-  
   <script src="https://cdn.tailwindcss.com"></script>
-  
   <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 </head>
-<body class="bg-gray-100 font-sans text-gray-800">
-  <div id="root" class="min-h-screen flex items-center justify-center p-4"></div>
+<body class="bg-gray-100">
+  <div id="root" class="p-4"></div>
 
   <script type="text/babel">
     function SympafixCalculator() {
@@ -153,7 +151,6 @@
         ))
       );
 
-      // STAP 1: PRODUCT KIEZEN
       if (step === 1) {
         const products = [
           { label: "UC200-PLUS ULTRABOND", value: "_UC200_PLUS_ULTRABOND", img: "uc200plus.png" },
@@ -166,22 +163,17 @@
           setStep(2);
         };
         return (
-          <div className="w-full max-w-3xl bg-white shadow-xl rounded-2xl p-6">
-            <h1 className="text-3xl font-bold text-center mb-8 text-gray-900">Kies uw product</h1>
-            <div className="grid grid-cols-2 gap-6">
+          <div className="p-4 max-w-3xl mx-auto bg-white shadow rounded-2xl">
+            <h1 className="text-2xl font-bold text-center mb-6">Kies uw product</h1>
+            <div className="grid grid-cols-2 gap-4">
               {products.map((product) => (
                 <button
                   key={product.value}
                   onClick={() => handleProductSelect(product.value)}
-                  className="border-2 border-gray-100 rounded-2xl p-6 hover:border-black hover:shadow-xl transition-all duration-200 flex flex-col items-center bg-white group"
+                  className="border rounded-2xl p-3 hover:shadow transition flex flex-col items-center bg-gray-50"
                 >
-                  <span className="font-bold mb-4 text-center text-lg text-gray-800 group-hover:text-black">{product.label}</span>
-                  {/* Hier zorgen className 'h-32' en 'object-contain' ervoor dat het plaatje nooit te groot wordt */}
-                  <img 
-                    src={`${product.img}`} 
-                    alt={product.label} 
-                    className="h-32 w-auto object-contain rounded-md" 
-                  />
+                  <span className="font-semibold mb-2 text-center text-sm">{product.label}</span>
+                  <img src={`${product.img}`} alt={product.label} className="h-24 object-contain rounded-lg" />
                 </button>
               ))}
             </div>
@@ -189,95 +181,68 @@
         );
       }
 
-      // STAP 2: DE REKENMACHINE
       return (
-        <div className="w-full max-w-lg bg-white shadow-xl rounded-2xl p-6 space-y-6">
-          <button onClick={() => setStep(1)} className="text-sm font-medium text-gray-500 hover:text-black flex items-center transition">
-            ← Terug naar productkeuze
-          </button>
-          
-          <div>
-            <h1 className="text-2xl font-extrabold text-center text-gray-900">Volumecalculator</h1>
-            <p className="text-center text-sm text-green-600 font-medium mt-1">
-              {inputs.product.replace(/_/g, ' ').trim()}
-            </p>
+        <div className="p-4 max-w-md mx-auto bg-white shadow rounded-2xl space-y-4 font-sans">
+          <button onClick={() => setStep(1)} className="text-sm bg-gray-200 px-4 py-1 rounded hover:bg-gray-300">← Terug naar productkeuze</button>
+          <h1 className="text-2xl font-bold text-center mb-2">Sympafix volumecalculator</h1>
+          <p className="text-center text-sm text-gray-600">Gekozen product: {inputs.product.replace(/_/g, ' ').trim()}</p>
+
+          <div className="grid grid-cols-2 gap-2 items-center">
+            <span className="font-medium">Volume koker:</span>
+            <select name="kokermaat" value={inputs.kokermaat} onChange={handleChange} className="p-2 border rounded">
+              {renderKokerOptions().map((ml) => (<option key={ml} value={ml}>{ml} ml</option>))}
+            </select>
+
+            <span className="font-medium">Wat verlijmt u:</span>
+            <select name="verlijming" value={inputs.verlijming} onChange={handleChange} className="p-2 border rounded">
+              <option value="massief_draadeinden">In massieve ondergrond, draadeinden</option>
+              <option value="massief_wapening">In massieve ondergrond, wapening</option>
+              {isHolOptieToegestaan(inputs.product) && (<option value="hol_zeefhuls">In hol metselwerk met zeefhuls</option>)}
+            </select>
+
+            {inputs.verlijming === "hol_zeefhuls" ? (
+              <>
+                <span className="font-medium">Zeefhuls:</span>
+                <select name="zeefhuls" value={inputs.zeefhuls} onChange={handleChange} className="p-2 border rounded">
+                  {renderZeefhulsOptions()}
+                </select>
+              </>
+            ) : (
+              <>
+                <span className="font-medium">Diameter anker:</span>
+                <select name="staafdiameter" value={inputs.staafdiameter} onChange={handleChange} className="p-2 border rounded">
+                  {renderDiameterOptions()}
+                </select>
+              </>
+            )}
+
+            <span className="font-medium">Boordiameter:</span>
+            <div className="p-2 border rounded bg-gray-100 text-gray-700">{inputs.boordiameter} mm</div>
+
+            <span className="font-medium">Boordiepte (mm):</span>
+            <input type="number" name="diepte" value={inputs.diepte} onChange={handleChange} className="p-2 border rounded" />
+
+            <span className="font-medium">Verlies:</span>
+            <select name="verlies" value={inputs.verlies} onChange={handleChange} className="p-2 border rounded">
+              <option value={10}>10%</option>
+              <option value={15}>15%</option>
+              <option value={20}>20%</option>
+              <option value={25}>25%</option>
+            </select>
+
+            <span className="font-medium">Aantal boorgaten:</span>
+            <input type="number" name="aantalGaten" value={inputs.aantalGaten} onChange={handleChange} className="p-2 border rounded" />
           </div>
 
-          <div className="grid grid-cols-1 gap-4 bg-gray-50 p-4 rounded-xl border border-gray-100">
-            
-            {/* Invoer velden grid */}
-            <div className="grid grid-cols-2 gap-4 items-center">
-              <label className="font-semibold text-sm text-gray-700">Volume koker:</label>
-              <select name="kokermaat" value={inputs.kokermaat} onChange={handleChange} className="p-2 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-black outline-none">
-                {renderKokerOptions().map((ml) => (<option key={ml} value={ml}>{ml} ml</option>))}
-              </select>
-
-              <label className="font-semibold text-sm text-gray-700">Toepassing:</label>
-              <select name="verlijming" value={inputs.verlijming} onChange={handleChange} className="p-2 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-black outline-none">
-                <option value="massief_draadeinden">Massief beton (draadeind)</option>
-                <option value="massief_wapening">Massief beton (wapening)</option>
-                {isHolOptieToegestaan(inputs.product) && (<option value="hol_zeefhuls">Hol metselwerk (zeefhuls)</option>)}
-              </select>
-
-              {inputs.verlijming === "hol_zeefhuls" ? (
-                <>
-                  <label className="font-semibold text-sm text-gray-700">Zeefhuls:</label>
-                  <select name="zeefhuls" value={inputs.zeefhuls} onChange={handleChange} className="p-2 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-black outline-none">
-                    {renderZeefhulsOptions()}
-                  </select>
-                </>
-              ) : (
-                <>
-                  <label className="font-semibold text-sm text-gray-700">Diameter anker:</label>
-                  <select name="staafdiameter" value={inputs.staafdiameter} onChange={handleChange} className="p-2 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-black outline-none">
-                    {renderDiameterOptions()}
-                  </select>
-                </>
-              )}
-
-              <label className="font-semibold text-sm text-gray-700">Boordiameter:</label>
-              <div className="p-2 rounded-lg bg-gray-200 text-gray-700 font-mono text-center">{inputs.boordiameter} mm</div>
-
-              <label className="font-semibold text-sm text-gray-700">Boordiepte (mm):</label>
-              <input type="number" name="diepte" value={inputs.diepte} onChange={handleChange} className="p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black outline-none" />
-
-              <label className="font-semibold text-sm text-gray-700">Verlies:</label>
-              <select name="verlies" value={inputs.verlies} onChange={handleChange} className="p-2 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-black outline-none">
-                <option value={10}>10%</option>
-                <option value={15}>15%</option>
-                <option value={20}>20%</option>
-                <option value={25}>25%</option>
-              </select>
-
-              <label className="font-semibold text-sm text-gray-700">Aantal gaten:</label>
-              <input type="number" name="aantalGaten" value={inputs.aantalGaten} onChange={handleChange} className="p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black outline-none" />
-            </div>
-          </div>
-
-          <button onClick={calculate} className="w-full bg-black text-white font-bold text-lg px-6 py-3 rounded-xl hover:bg-gray-800 transform active:scale-95 transition shadow-lg">
-            Bereken nu
-          </button>
+          <button onClick={calculate} className="mt-4 w-full bg-black text-white px-6 py-2 rounded-xl hover:bg-gray-800 transition">Bereken aantal kokers</button>
 
           {result && (
-            <div className="animate-fade-in mt-6 p-5 border-l-4 border-black bg-gray-50 rounded-r-xl shadow-inner">
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-gray-600">Volume per gat:</span>
-                <span className="font-bold">{result.volumePerGat.toFixed(1)} ml</span>
-              </div>
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-gray-600">Totaal volume:</span>
-                <span className="font-bold">{result.totaalVolume.toFixed(1)} ml</span>
-              </div>
-              <div className="border-t border-gray-300 my-2 pt-2 flex justify-between items-center text-lg">
-                <span className="font-bold text-black">Benodigde kokers:</span>
-                <span className="font-black text-white bg-black px-3 py-1 rounded-lg">{result.aantalKokers}</span>
-              </div>
+            <div className="mt-6 p-4 border rounded-2xl bg-gray-50 text-left space-y-2 text-sm">
+              <p><strong>Volume per boorgat:</strong> {result.volumePerGat.toFixed(2)} ml</p>
+              <p><strong>Totaal nodig:</strong> {result.totaalVolume.toFixed(2)} ml</p>
+              <p><strong>Aantal kokers:</strong> {result.aantalKokers}</p>
             </div>
           )}
-
-          <p className="text-xs text-gray-400 text-center pt-4 border-t italic">
-            Disclaimer: Aan het gebruik van deze tool kunnen geen rechten worden ontleend. Controleer altijd zelf of de informatie juist is.
-          </p>
         </div>
       );
     }
